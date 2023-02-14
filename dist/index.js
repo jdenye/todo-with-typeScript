@@ -21,8 +21,10 @@ function displayTodoList() {
 }
 var Commands;
 (function (Commands) {
-    Commands["Add"] = "Ad New Task";
+    Commands["Add"] = "Add New Task";
+    Commands["complete"] = "complete task";
     Commands["Toggle"] = "show / Hide complted";
+    Commands["purge"] = "Remove completed task";
     Commands["Quit"] = "Quit";
 })(Commands || (Commands = {}));
 function promptAdd() {
@@ -30,13 +32,29 @@ function promptAdd() {
     inquirer.prompt({
         type: "input",
         name: "add",
-        message: "Enter task: "
+        message: "Enter task: ",
     })
         .then(answers => {
         if (answers["add"] !== "") {
             collection.addTodo(answers["add"]);
         }
         promptUser;
+    });
+}
+function promptComplete() {
+    console.clear();
+    inquirer.prompt({
+        type: "checkbox",
+        name: "complete",
+        message: "mark As completed",
+        choices: collection.getTodoItems(showCompleted)
+            .map(item => ({ name: item.task, value: item.id, checked: item.complete }))
+    })
+        .then(answers => {
+        let completedTasks = answers["complete"];
+        collection.getTodoItems(true).forEach(item => collection
+            .markCompleted(item.id, completedTasks.find(id => id === item.id) != undefined));
+        promptUser();
     });
 }
 function promptUser() {
@@ -46,6 +64,7 @@ function promptUser() {
         type: "list",
         name: "command",
         message: "Choose option",
+        // badproperty : true,
         choices: Object.values(Commands)
     }).then(answers => {
         switch (answers["comand"]) {
@@ -55,6 +74,18 @@ function promptUser() {
                 break;
             case Commands.Add:
                 promptAdd();
+                break;
+            case Commands.complete:
+                if (collection.getItemCount().incomplete > 0) {
+                    promptComplete();
+                }
+                else {
+                    promptUser();
+                }
+                break;
+            case Commands.purge:
+                collection.removeComplete();
+                promptUser();
                 break;
         }
     });

@@ -21,44 +21,77 @@ function displayTodoList(): void {
     collection.getTodoItems(showCompleted).forEach(item => item.printDetails());
 }
 
-enum Commands{
-    Add = "Ad New Task",
+enum Commands {
+    Add = "Add New Task",
+    complete = "complete task",
     Toggle = "show / Hide complted",
+    purge = "Remove completed task",
     Quit = "Quit"
 }
 
-function promptAdd() :void{
+function promptAdd(): void {
     console.clear();
     inquirer.prompt({
         type: "input",
         name: "add",
-        message: "Enter task: "
+        message: "Enter task: ",
+
     })
-    .then(answers => {if(answers["add"] !== ""){
-        collection.addTodo(answers["add"]);
-    }
-    promptUser
-})
-} 
+        .then(answers => {
+            if (answers["add"] !== "") {
+                collection.addTodo(answers["add"]);
+            }
+            promptUser
+        })
+}
+function promptComplete(): void {
+    console.clear();
+    inquirer.prompt({
+        type: "checkbox",
+        name: "complete",
+        message: "mark As completed",
+        choices: collection.getTodoItems(showCompleted)
+            .map(item => ({ name: item.task, value: item.id, checked: item.complete }))
+    })
+        .then(answers => {
+            let completedTasks = answers["complete"] as number[];
+            collection.getTodoItems(true).forEach(item => collection
+                .markCompleted(item.id, completedTasks.find(id => id === item.id) != undefined));
+            promptUser();
+        })
+}
+
+
+
 function promptUser(): void {
     console.clear();
     displayTodoList();
     inquirer.prompt({
-    type: "list",
-    name: "command",
-    message: "Choose option",
-    choices: Object.values(Commands)
+        type: "list",
+        name: "command",
+        message: "Choose option",
+        // badproperty : true,
+        choices: Object.values(Commands)
     }).then(answers => {
         switch (answers["comand"]) {
             case Commands.Toggle: showCompleted = !showCompleted;
-                promptUser()
+                promptUser();
                 break;
             case Commands.Add: promptAdd();
-            break;
+                break;
+            case Commands.complete: if (collection.getItemCount().incomplete > 0) {
+                promptComplete();
+            } else {
+                promptUser();
+            }
+                break;
+            case Commands.purge: collection.removeComplete();
+                promptUser();
+                break;
         }
-  
+
     })
-    }
+}
 promptUser()
 // let newId: number =collection.addTodo("Go for run");
 

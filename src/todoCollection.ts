@@ -1,12 +1,13 @@
 import { TodoItem } from "./todoItem";
+
 type ItemCount = {
     total: number,
     incomplete: number
 }
 
-class TodoCollection {
+export class TodoCollection {
     private nextId: number = 1;
-    private itemMap = new Map<number, TodoItem>();
+    protected itemMap = new Map<number, TodoItem>();
 
     constructor(
         public username: String,
@@ -52,4 +53,4 @@ class TodoCollection {
 
 }
 
-export{ TodoCollection };
+//{ TodoCollection };
